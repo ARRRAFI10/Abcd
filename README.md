@@ -206,6 +206,35 @@ VITE_META_PIXEL_ID=1242084508126895
 a Meta access token, Conversions API token, database password, or other secret
 in a Vite variable. Rebuild the frontend after changing any Vite configuration.
 
+## Vercel storefront and Render backend
+
+The repository includes `render.yaml` for the Django API and PostgreSQL, and
+`frontend/vercel.mjs` for the Vite storefront. Deploy Render first, then Vercel:
+
+1. Push this repository to GitHub. In Render, create a Blueprint from its
+   `render.yaml`. During the initial Blueprint setup, set
+   `DJANGO_INITIAL_ADMIN_PASSWORD` to a strong password. The first start creates
+   an `admin` user; later starts do not reset its password.
+2. Wait for the Render service to pass its `/api/products/` health check. Its
+   URL is shown in Render, for example
+   `https://arrrafi10-moon-shop-api.onrender.com`. The first start creates the
+   four demonstration products with their bundled photos.
+3. In Vercel, import the same GitHub repository with **Root Directory** set to
+   `frontend`. Set the project environment variable `RENDER_BACKEND_URL` to the
+   exact HTTPS URL of the Render service (without a trailing slash), then deploy.
+   Vercel forwards `/api/` and `/media/` requests to Render and serves React
+   routes from `index.html`.
+4. Check the Vercel storefront and the Render `/admin/` page. Log in with
+   username `admin` and the password provided during Blueprint setup.
+
+The Blueprint uses Render's free plans for a preview. Free PostgreSQL expires
+after 30 days, and free web services have ephemeral filesystems, so new
+admin-uploaded photos can disappear after a restart. Before accepting live
+orders, upgrade the database and web service to paid plans, attach a persistent
+disk at `/var/data`, set `DJANGO_MEDIA_ROOT=/var/data/media`, and update the plan
+fields in `render.yaml`. The bundled demonstration photos are restored when
+needed; admin-uploaded files require persistent storage.
+
 ## Production deployment
 
 These instructions deploy PostgreSQL, Gunicorn, Nginx, and HTTPS on Ubuntu. The

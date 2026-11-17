@@ -1,5 +1,6 @@
 from io import BytesIO
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from PIL import Image
 from django.contrib.auth import get_user_model
@@ -177,3 +178,27 @@ class AdminTests(TestCase):
         self.assertContains(response, 'name="size_chart"')
         self.assertContains(response, 'name="delivery_inside_dhaka"')
         self.assertContains(response, 'name="delivery_outside_dhaka"')
+
+
+class CatalogBootstrapTests(TestCase):
+    def test_initial_products_have_photos_without_overwriting_admin_edits(self):
+        with TemporaryDirectory() as media_root, override_settings(MEDIA_ROOT=media_root):
+            call_command("bootstrap_catalog", verbosity=0)
+            self.assertEqual(Product.objects.count(), 4)
+            for product in Product.objects.all():
+                self.assertTrue(product.image.storage.exists(product.image.name))
+
+            Product.objects.filter(slug="charcoal-herringbone").update(price="1775.00")
+            call_command("bootstrap_catalog", verbosity=0)
+            self.assertEqual(str(Product.objects.get(slug="charcoal-herringbone").price), "1775.00")
+
+    def test_initial_admin_password_is_not_reset_on_restart(self):
+        with patch.dict("os.environ", {"DJANGO_INITIAL_ADMIN_PASSWORD": "first-secret-password"}):
+            call_command("bootstrap_admin")
+            user = get_user_model().objects.get(username="admin")
+            self.assertTrue(user.check_password("first-secret-password"))
+            user.set_password("new-secret-password")
+            user.save()
+            call_command("bootstrap_admin")
+            user.refresh_from_db()
+            self.assertTrue(user.check_password("new-secret-password"))
