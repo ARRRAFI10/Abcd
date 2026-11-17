@@ -1,4 +1,6 @@
-const BASE = "/api";
+const BASE = (import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD
+  ? "https://arrrafi10-moon-shop-api.onrender.com/api"
+  : "/api")).replace(/\/+$/, "");
 
 async function request(path, options) {
   let res;

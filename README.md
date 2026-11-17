@@ -220,10 +220,13 @@ The repository includes `render.yaml` for the Django API and PostgreSQL, and
    `https://arrrafi10-moon-shop-api.onrender.com`. The first start creates the
    four demonstration products with their bundled photos.
 3. In Vercel, import the same GitHub repository with **Root Directory** set to
-   `frontend`, then deploy. `frontend/vercel.json` forwards `/api/` and `/media/`
-   requests to the Render service and serves React routes from `index.html`.
-   If Render assigns a different public hostname, update both rewrite
-   destinations in `frontend/vercel.json` and redeploy.
+   `frontend`, then deploy. The production storefront calls the Render API
+   directly; `DJANGO_STOREFRONT_ORIGINS` in `render.yaml` permits the Vercel
+   domain to make those requests. `frontend/vercel.json` also forwards `/api/`
+   and `/media/` URLs and serves React routes from `index.html`. If either
+   service's public hostname changes, update the API URL in `frontend/src/api.js`,
+   both rewrite destinations in `frontend/vercel.json`, and the allowed
+   storefront origin in `render.yaml`, then redeploy both services.
 4. Check the Vercel storefront and the Render `/admin/` page. Log in with
    username `admin` and the password provided during Blueprint setup.
 

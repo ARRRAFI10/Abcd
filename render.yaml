@@ -24,5 +24,7 @@ services:
         value: "0"
       - key: DJANGO_SERVE_MEDIA
         value: "1"
+      - key: DJANGO_STOREFRONT_ORIGINS
+        value: https://abcd-uk75.vercel.app
       - key: DJANGO_INITIAL_ADMIN_PASSWORD
         sync: false

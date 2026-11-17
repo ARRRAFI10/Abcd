@@ -68,6 +68,26 @@ class ShopAPITests(TestCase):
             self.assertEqual(res.status_code, 200)
             self.assertIn("/media/settings/chart.png", res.json()["size_chart_url"])
 
+    @override_settings(STOREFRONT_ORIGINS=["https://abcd-uk75.vercel.app"])
+    def test_configured_storefront_can_call_api(self):
+        origin = "https://abcd-uk75.vercel.app"
+        response = self.client.get("/api/products/", HTTP_ORIGIN=origin)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Access-Control-Allow-Origin"], origin)
+
+        preflight = self.client.options(
+            "/api/orders/",
+            HTTP_ORIGIN=origin,
+            HTTP_ACCESS_CONTROL_REQUEST_METHOD="POST",
+            HTTP_ACCESS_CONTROL_REQUEST_HEADERS="content-type",
+        )
+        self.assertEqual(preflight.status_code, 204)
+        self.assertEqual(preflight["Access-Control-Allow-Origin"], origin)
+        self.assertIn("Content-Type", preflight["Access-Control-Allow-Headers"])
+
+        other = self.client.get("/api/products/", HTTP_ORIGIN="https://unrelated.example")
+        self.assertNotIn("Access-Control-Allow-Origin", other)
+
     def test_product_detail_by_slug(self):
         res = self.client.get("/api/products/charcoal-herringbone/")
         self.assertEqual(res.status_code, 200)
